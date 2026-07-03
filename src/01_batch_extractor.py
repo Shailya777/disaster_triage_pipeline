@@ -15,6 +15,7 @@ import os
 import glob
 import json
 import csv
+from typing import Tuple
 import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 
@@ -31,5 +32,40 @@ TFRECORD_OUT= os.path.join(PROCESSED_DIR, 'fetures.tfrecord')
 # Ensuring Processed Directory Exists:
 os.makedirs(PROCESSED_DIR, exist_ok= True)
 
+# ---------------------------------------------------------------------
+# PHASE 1: METADATA PARSING & CSV GENERATION
+# ---------------------------------------------------------------------
+
+
+def extract_bbox_from_wkt(wkt_polygon: str) -> tuple[int, int, int, int]:
+    """
+    Converts an xBD Well-Known Text (WKT) polygon string into a standard bounding box.
+
+    Args:
+        wkt_polygon (str): The polygon string from the xBD JSON (e.g., 'POLYGON ((x1 y1, ...))').
+
+    Returns:
+        tuple[int, int, int, int]: A tuple containing the bounding box coordinates 
+        in the format (ymin, xmin, ymax, xmax).
+    """
+
+    # Cleaning the wkt_polygon string and Splitting into Coordinates:
+    wkt_clean= wkt_polygon.replace('POLYGON ((', '').replace('))', '')
+    points= wkt_clean.split(', ')
+    x_coords= []
+    y_coords= []
+
+    for point in points:
+        x, y= point.split(' ')
+        x_coords.append(float(x))
+        y_coords.append(float(y))
+
+    # Bounding Box:
+    xmin, xmax= int(min(x_coords)), int(max(x_coords))
+    ymin, ymax= int(min(y_coords)), int(max(y_coords))
+
+    return ymin, xmin, ymax, xmax
+
 if __name__ == '__main__':
-    pass
+    a,b,c,d= extract_bbox_from_wkt('POLYGON ((-90.81544679490855 14.39086318334812, -90.81537467350067 14.39060467857134, -90.81584174451893 14.39043032647906, -90.81586635209965 14.39049581582557, -90.81593344431286 14.39048145754227, -90.81595559689623 14.39057367091926, -90.81587964155047 14.39059650626524, -90.81590706308843 14.39071123556855, -90.81544679490855 14.39086318334812))')
+    print(a, b, c, d)
