@@ -1,0 +1,21 @@
+# Python / Environments
+__pycache__/
+*.py[cod]
+*.class
+.ipynb_checkpoints/
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data & Models (Strictly ignoring the 7.8GB payload and extracted features)
+data/
+models/
+*.h5
+*.hdf5
+*.parquet
+*.npy
+*.npz
+*.tfrecord
+*.json
