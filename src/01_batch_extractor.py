@@ -132,6 +132,47 @@ def build_metadata_csv() -> None:
     
     print(f"[Phase 1] Metadata Saved to {METADATA_CSV}")
 
+# ---------------------------------------------------------------------
+# PHASE 2: tf.data Pipeline & Feature Extraction
+# ---------------------------------------------------------------------
+
+def load_and_crop_image(image_path: tf.Tensor, ymin: tf.Tensor, xmin: tf.Tensor, 
+                        ymax: tf.Tensor, xmax: tf.Tensor) -> tf.Tensor:
+    """
+    Loads an image from disk, crops it using bounding box coordinates, and applies 
+    ResNet50 preprocessing.
+
+    Designed to be mapped over a tf.data.Dataset. It decodes a PNG image, applies 
+    `tf.image.crop_to_bounding_box`, resizes the crop to (224, 224), and zero-centers 
+    the color channels using `preprocess_input`.
+
+    Args:
+        image_path (tf.Tensor): A string tensor containing the filepath to the image.
+        ymin (tf.Tensor): An integer tensor representing the minimum Y coordinate.
+        xmin (tf.Tensor): An integer tensor representing the minimum X coordinate.
+        ymax (tf.Tensor): An integer tensor representing the maximum Y coordinate.
+        xmax (tf.Tensor): An integer tensor representing the maximum X coordinate.
+    """
+
+    # Reading and Decoding the Image:
+    image_raw= tf.io.read_file(image_path)
+    image= tf.image.decode_png(image_raw, channels= 3)
+
+    # Calculating Dimensions for the Crop:
+    height= ymax - ymin
+    width= xmax - xmin
+
+    # Cropping a building out of the larger image:
+    cropped_image= tf.image.crop_to_bounding_box(image, ymin, xmin, height, width)
+
+    # Resizing The Cropped Image to ResNet50's Expected Input Size:
+    resized_image= tf.image.resize(cropped_image, [224, 224])
+
+    # Applying ResNet50's Pre-Processing:
+    preprocessed_image= preprocess_input(resized_image)
+
+    return preprocessed_image
+
 if __name__ == '__main__':
     #a,b,c,d= extract_bbox_from_wkt('POLYGON ((-90.81544679490855 14.39086318334812, -90.81537467350067 14.39060467857134, -90.81584174451893 14.39043032647906, -90.81586635209965 14.39049581582557, -90.81593344431286 14.39048145754227, -90.81595559689623 14.39057367091926, -90.81587964155047 14.39059650626524, -90.81590706308843 14.39071123556855, -90.81544679490855 14.39086318334812))')
     #print(a, b, c, d)
