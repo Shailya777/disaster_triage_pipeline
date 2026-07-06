@@ -18,6 +18,7 @@ import csv
 from typing import Tuple
 import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
+from tqdm import tqdm
 
 # Configuration and Paths:
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -205,12 +206,82 @@ def serialize_example(building_id: tf.Tensor, feature_vector: tf.Tensor, label: 
     examplt_proto= tf.train.Example(features= tf.train.Features(feature= feature))
     return examplt_proto.SerializeToString()
 
-if __name__ == '__main__':
-    #a,b,c,d= extract_bbox_from_wkt('POLYGON ((-90.81544679490855 14.39086318334812, -90.81537467350067 14.39060467857134, -90.81584174451893 14.39043032647906, -90.81586635209965 14.39049581582557, -90.81593344431286 14.39048145754227, -90.81595559689623 14.39057367091926, -90.81587964155047 14.39059650626524, -90.81590706308843 14.39071123556855, -90.81544679490855 14.39086318334812))')
-    #print(a, b, c, d)
+def run_extraction_pipeline() -> None:
+    """
+    Initializes the ResNet50 model, configures the tf.data stream, and executes 
+    the feature extraction, writing the results to a TFRecord file.
 
-    #build_metadata_csv()
-    temp_str= serialize_example(building_id= tf.constant('buidling_101'),
-                                feature_vector= tf.constant([0.23, 0.81, 0.17], dtype= tf.float32),
-                                label= tf.constant('destroyed'))
-    print(temp_str)
+    This function loads a frozen ResNet50 model (without the top classification layer), 
+    reads the pre-generated `METADATA_CSV` to construct a high-performance `tf.data.Dataset`, 
+    maps the cropping function across batches, and serializes the resulting feature 
+    vectors to `TFRECORD_OUT`.
+
+    Returns:
+        None
+    """
+
+    print('[Phase 2] Initializing ResNet50 (frozen) on GPU...')
+
+    # Loading ResNet50 without classification head:
+    extractor_model= ResNet50(weights= 'imagenet',
+                              include_top= False,
+                              pooling= 'avg')
+    
+    # Loading Metadat:
+    print('[Phase 2] Loading Metadata Stream...')
+    building_ids, image_paths, ymins, xmins, ymaxs, xmaxs, labels,= [], [], [], [], [], [], []
+
+    with open(METADATA_CSV, 'r') as f:
+        reader= csv.DictReader(f)
+        for row in reader:
+            building_ids.append(row['building_id'].encode('utf-8'))
+            image_paths.append(row['image_path'])
+            ymins.append(int(row['ymin']))
+            xmins.append(int(row['xmin']))
+            ymaxs.append(int(row['ymax']))
+            xmaxs.append(int(row['xmax']))
+            labels.append(row['label'].encode('utf-8'))
+
+    # Creating tf.data.Dataset:
+    dataset= tf.data.Dataset.from_tensor_slices((
+        image_paths, ymins, xmins, ymaxs, xmaxs, building_ids, labels
+    ))
+
+    # Applying Crop Fucntion to crop images:
+    def map_fn(img_path, ymin, xmin, ymax, xmax, b_id, lbl):
+        processed_img= load_and_crop_image(image_path= img_path,
+                                           ymin= ymin,
+                                           xmin= xmin,
+                                           ymax= ymax,
+                                           xmax= xmax)
+        
+        return processed_img, b_id, lbl
+    
+    batch_size= 32
+    dataset= dataset.map(map_func= map_fn, num_parallel_calls= tf.data.AUTOTUNE)
+    dataset= dataset.batch(batch_size= batch_size).prefetch(buffer_size= tf.data.AUTOTUNE)
+
+    print(f'[Phase 2] Beginning feature extraction to {TFRECORD_OUT}...')
+    with tf.io.TFRecordWriter(path= TFRECORD_OUT) as writer:
+        for batch_images, batch_ids, batch_labels in tqdm(dataset, desc="Extracting Features"):
+            
+            # Forward Pass through ResNet50
+            features= extractor_model(batch_images, training= False)
+
+            # Serializing and Writing Each Image in the Batch:
+            for i in range(len(features)):
+                tf_example= serialize_example(building_id= batch_ids[i],
+                                              feature_vector= features[i],
+                                              label= batch_labels[i])
+                writer.write(tf_example)
+    
+    print('[Phase 2] Extraction Complete.')
+
+
+if __name__ == '__main__':
+    if not os.path.exists(METADATA_CSV):
+        build_metadata_csv()
+    else:
+        print('[Phase 1] metadata.csv already exists. Skipping rebuild.')
+    
+    run_extraction_pipeline()
