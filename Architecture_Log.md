@@ -92,3 +92,23 @@ Structured a modular Jupyter Notebook framework to evaluate multiple class-imbal
   - SMOTE
 - **Decision Threshold Optimization**
   - Custom probability threshold tuning
+
+## Triage Classification & Class Imbalance Resolution
+
+### Experiment 1 (Naive Baseline): Trained a vanilla XGBClassifier on the raw 2048-d vectors.
+
+- Result: Achieved 80% global accuracy, but exhibited severe "majority class laziness." The model achieved only a 55% Recall on "Destroyed" buildings, fatally misclassifying over 1,000 flattened structures as "No Damage."
+
+### Experiment 2 (Algorithmic Balancing): Engineered a dynamic sample_weight array (compute_sample_weight) to mathematically penalize the XGBoost loss function for missing minority classes.
+
+- Result: Successfully manipulated the model's objective. Overall accuracy dropped to 72%, but "Destroyed" Recall surged to 74%, and "Major Damage" Recall more than doubled to 52%.
+
+- Architectural Decision: Validated the trade-off. In disaster triage operations, False Positives (wasted drone flight time) are infinitely preferable to False Negatives (ignored collapsed structures).
+
+### Experiment 3 (Synthetic Data Generation - SMOTE): Attempted to balance the dataset by generating synthetic minority class samples using SMOTE across the 2048-dimensional feature space.
+
+- Result: Failed to outperform algorithmic weighting. "Destroyed" Recall dropped to 61% (down from 74%), and fatal misclassifications (Destroyed predicted as No Damage) more than doubled.
+
+- Architectural Decision: Rejected SMOTE. Confirmed that generating synthetic points via linear interpolation in a high-dimensional deep learning embedding space creates invalid data points (The Curse of Dimensionality).
+
+- Final Baseline Selection: Officially selected the Algorithmically Weighted XGBoost Model (Experiment 2) as the production baseline due to its superior operational recall and zero synthetic data contamination.
