@@ -112,3 +112,15 @@ Structured a modular Jupyter Notebook framework to evaluate multiple class-imbal
 - Architectural Decision: Rejected SMOTE. Confirmed that generating synthetic points via linear interpolation in a high-dimensional deep learning embedding space creates invalid data points (The Curse of Dimensionality).
 
 - Final Baseline Selection: Officially selected the Algorithmically Weighted XGBoost Model (Experiment 2) as the production baseline due to its superior operational recall and zero synthetic data contamination.
+
+### Experiment 4 (Hyperparameter Tuning vs. Operational Intent): Attempted GPU-accelerated hyperparameter tuning (Custom Loop to bypass Scikit-Learn memory leaks).
+
+- Result: The tuner optimized for f1_macro, successfully raising overall accuracy and precision, but mathematically sacrificing "Destroyed" Recall (dropping it from 74% to 70%).
+
+- Architectural Decision: Rejected the tuned model. In disaster response, prioritizing F1/Accuracy over minority-class Recall is an operational failure. Retained the untuned Weighted Model (Experiment 2).
+
+### Experiment 5 (Custom Threshold Optimization): Discarded standard argmax probability boundaries (50%+). Engineered custom decision logic to heavily bias the model toward minority classes (e.g., flagging Class 3 if probability > 30%).
+
+- Result: Achieved project climax. "Destroyed" Recall reached 78%, and "Major Damage" Recall hit 62%. Fatal misclassifications (Class 3 predicted as Class 0) were reduced by over 70% from the naive baseline (1,049 $\rightarrow$ 294).
+
+- Conclusion: Deliberately sacrificed global accuracy (down to 67%) to maximize operational triage survival rates, successfully validating the Decoupled Multimodal Pipeline architecture.
