@@ -62,3 +62,38 @@ def load_dataset():
     print(f'Feature Matrix Shape: {X.shape}')
 
     return X, y, ids
+
+# ---------------------------------------------------------------------
+# Curating Golden Dataset from Training Images
+# ---------------------------------------------------------------------
+
+def curate_golden_samples():
+    """
+    Algorithmic curation pipeline to generate a 50-image 'Golden Sample' showcase.
+    
+    This function bypasses manual image selection by mathematically evaluating the 
+    model's performance across the dataset. It loads the frozen ResNet50 features 
+    and the serialized XGBoost champion model, generates in-memory predictions using 
+    custom disaster triage thresholds, and aggregates performance metrics at the 
+    image level using Pandas.
+
+    Images are selected based on three strict operational criteria:
+    1. High Density & High Confidence: Images with 50+ structures, >85% accuracy, 
+       and >3 destroyed targets.
+    2. The 'Needle in a Haystack': Images with 20+ intact structures but only 1-2 
+       destroyed targets, flagged with >90% accuracy.
+    3. Edge Cases & Terrain Diversity: Top-performing images (>80% accuracy) 
+       sampled evenly across different disaster categories (e.g., hurricanes, fires).
+
+    The final set of up to 50 unique, deduplicated images is automatically copied 
+    from the raw source directory to the designated showcase directory for 
+    downstream processing by the web application.
+
+    Dependencies:
+        - Requires `features.tfrecord` and `xgboost_weighted_champion.json`.
+        - Relies on global environment variables: TFRECORD_PATH, MODEL_JSON_PATH, 
+          SOURCE_IMG_DIR, and SHOWCASE_DIR.
+
+    Returns:
+        None (Executes file I/O copying operations directly).
+    """
