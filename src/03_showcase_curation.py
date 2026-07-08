@@ -193,8 +193,31 @@ def curate_golden_samples():
     edge_cases= c3.groupby('disaster_type').apply(lambda x: x.sample(min(3, len(x)), random_state= 42)).reset_index(drop= True)
     selected_images.extend(edge_cases['image_name'].tolist())
 
-    print(len(selected_images))
-    print(selected_images[:10])
+    #print(len(selected_images))
+    #print(selected_images[:10])
+
+    # -------------------------------------------------------
+    # Phase 4: Copying Selected files from Source to Showcase Directory:
+    # -------------------------------------------------------
+    
+    final_selection= list(set(selected_images))
+    if len(selected_images) > 50:
+        final_selection = np.random.choice(final_selection, 50, replace= False)
+
+    print(f'Selected {len(final_selection)} Images for Golden Showcase Samples. Copying to showcase directory...')
+
+    success_count= 0
+    for img_name in final_selection:
+        src= os.path.join(SOURCE_IMG_DIR, img_name)
+        dst= os.path.join(SHOWCASE_DIR, img_name)
+
+        if os.path.exists(src):
+            shutil.copy(src= src, dst= dst)
+            success_count += 1
+        else:
+            print(f'Warning: Could not find {src}')
+    
+    print(f'Golden Showcase Curation Complete. {success_count} Images copied to Showcase Directory.')
 
 if __name__ == '__main__':
     curate_golden_samples()
