@@ -97,3 +97,42 @@ def curate_golden_samples():
     Returns:
         None (Executes file I/O copying operations directly).
     """
+
+    # -------------------------------------------------------
+    # Phase 1: Genrating Predictions using XGBoost Classifier for entire Dataset
+    # -------------------------------------------------------
+
+    # Loading Dataset:
+    X_raw, y_raw, building_ids= load_dataset()
+
+    class_mapping= {
+        'no-damage': 0,
+        'minor-damage': 1,
+        'major-damage': 2,
+        'destroyed': 3,
+        'un-classified': 0
+        }
+    
+    # Generating Encoded Lables:
+    y_true= np.array([class_mapping.get(label, 0) for label in y_raw])
+
+    # Loading XGBoost Classifier:
+    xgb_model= xgb.XGBClassifier()
+    xgb_model.load_model(fname= MODEL_JSON_PATH)
+
+    # Generating Predictions across Entire Dataset using XGBoost Classifier:
+    # Using Same Custom Threshold Logic from Experiment 5 in 02_xgboost_experiments.ipynb:
+    raw_probs= xgb_model.predict_proba(X_raw)
+    y_pred= []
+
+    for p in raw_probs:
+        if p[3] > 0.30: y_pred.append(3)
+        elif p[2] > 0.30: y_pred.append(2)
+        else: y_pred.append(np.argmax(p[:2]))
+    
+    y_pred= np.array(y_pred)
+
+    
+
+if __name__ == '__main__':
+    curate_golden_samples()
