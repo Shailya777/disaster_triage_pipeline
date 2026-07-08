@@ -10,6 +10,9 @@ from sklearn.preprocessing import LabelEncoder
 # Suppressing Tensorflow Warnings:
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+# To Show all columns without truncation
+pd.set_option('display.max_columns', None)
+
 # Defining Paths:
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TFRECORD_PATH= os.path.join(PROJECT_DIR, 'data', 'processed', 'features.tfrecord')
@@ -132,7 +135,34 @@ def curate_golden_samples():
     
     y_pred= np.array(y_pred)
 
+    #print(building_ids[:5])
     
+    # -------------------------------------------------------
+    # Phase 2: Data Curation
+    # -------------------------------------------------------
+
+    print('Building Dataframe for Data Curation...')
+    df= pd.DataFrame({
+        'building_id': building_ids,
+        'true_label': y_true,
+        'pred_label': y_pred
+    })
+
+    # Extracting Image name from Building ID: (Buidling ID Format: imagename_uid)
+    df['image_name']= df['building_id'].apply(lambda x: '_'.join(x.split('_')[:4]) + '.png')
+    df['disaster_type']= df['building_id'].apply(lambda x: x.split('_')[0])
+    df['is_correct']= (df['true_label'] == df['pred_label']).astype(int)
+    df['is_destroyed']= (df['true_label'] == 3).astype(int)
+    df['is_nodamage']= (df['true_label'] == 0).astype(int)
+
+    # Generating Image Stats:
+    image_stats= df.groupby('image_name').agg(
+        disaster_type= ('disaster_type', 'first'),
+        total_buildings= ('building_id', 'count'),
+        accuracy= ('is_correct', 'mean'),
+        total_destroyed= ('is_destroyed', 'sum'),
+        total_nodamage= ('is_nodamage', 'sum')
+    ).reset_index()
 
 if __name__ == '__main__':
     curate_golden_samples()
