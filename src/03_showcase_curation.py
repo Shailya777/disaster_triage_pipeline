@@ -164,5 +164,37 @@ def curate_golden_samples():
         total_nodamage= ('is_nodamage', 'sum')
     ).reset_index()
 
+    # -------------------------------------------------------
+    # Phase 3: Selecting Images based on 3 Criterions:
+    # -------------------------------------------------------
+
+    selected_images= []
+
+    # Criterion 1: High Density / High Confidence (Lots of buildings, great accuracy):
+    c1= image_stats[
+        (image_stats['total_buildings'] >= 20) &
+        (image_stats['accuracy'] > 0.85) &
+        (image_stats['total_destroyed'] > 3) 
+    ]
+    selected_images.extend(c1.sample(min(15, len(c1)), random_state= 42)['image_name'].tolist())
+
+    # Criterion 2: Needle in Haystack (Mostly intact, 1-2 destroyed)
+    c2= image_stats[
+        (image_stats['total_nodamage'] >= 20) &
+        (image_stats['total_destroyed'].between(1, 2)) &
+        (image_stats['accuracy'] >= 0.90)
+    ]
+    selected_images.extend(c2.sample(min(15, len(c2)), random_state= 42)['image_name'].tolist())
+
+    # Criterion 3: Edge Cases / Diversity (Top performers across different disasters):
+    c3= image_stats[
+        (image_stats['accuracy'] > 0.80)
+    ]
+    edge_cases= c3.groupby('disaster_type').apply(lambda x: x.sample(min(3, len(x)), random_state= 42)).reset_index(drop= True)
+    selected_images.extend(edge_cases['image_name'].tolist())
+
+    print(len(selected_images))
+    print(selected_images[:10])
+
 if __name__ == '__main__':
     curate_golden_samples()
