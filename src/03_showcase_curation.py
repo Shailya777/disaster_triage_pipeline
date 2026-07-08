@@ -135,7 +135,6 @@ def curate_golden_samples():
     
     y_pred= np.array(y_pred)
 
-    #print(building_ids[:5])
     
     # -------------------------------------------------------
     # Phase 2: Data Curation
@@ -193,8 +192,6 @@ def curate_golden_samples():
     edge_cases= c3.groupby('disaster_type').apply(lambda x: x.sample(min(3, len(x)), random_state= 42)).reset_index(drop= True)
     selected_images.extend(edge_cases['image_name'].tolist())
 
-    #print(len(selected_images))
-    #print(selected_images[:10])
 
     # -------------------------------------------------------
     # Phase 4: Copying Selected files from Source to Showcase Directory:
