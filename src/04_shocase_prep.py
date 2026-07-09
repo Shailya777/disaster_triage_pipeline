@@ -8,6 +8,7 @@ import pandas as pd
 import tensorflow as tf
 import xgboost as xgb
 import cv2
+from tqdm import tqdm
 
 # Setting up Directory Paths:
 PROJECT_ROOT= os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +17,7 @@ SHOWCASE_DIR= os.path.join(PROJECT_ROOT, 'data', 'showcase')
 MODEL_JSON_PATH= os.path.join(PROJECT_ROOT, 'models', 'xgboost_classifier.json')
 OUTPUT_CSV_PATH= os.path.join(PROJECT_ROOT, 'data', 'processed', 'showcase.csv')
 
-def load_pipeline():
+def load_pipelines():
     """
     Initializes and loads the multimodal machine learning pipeline into memory.
 
@@ -109,7 +110,92 @@ def extract_real_buidings(image_name):
         
     return buildings
 
+def showcase_csv_prep():
+    """
+    Orchestrates the end-to-end data pipeline to generate the UI deployment payload.
+
+    Iterates through all Golden Sample images in the showcase directory, extracts
+    ground-truth building crops, processes them through the ResNet50/XGBoost 
+    classification pipeline, and aggregates the analytical results into a single,
+    lightweight CSV file for the Streamlit front-end.
+    """
+
+    # Loading ResNet50 and XGBoost Classifier: 
+    resnet, xgb_model= load_pipelines()
+
+    # Loading Showcase Image Paths:
+    image_paths= glob.glob(os.path.join(SHOWCASE_DIR, '*.png')) + \
+                 glob.glob(os.path.join(SHOWCASE_DIR, '*.jpg'))
+
+    if not image_paths:
+        print(f'Error: No images found in {SHOWCASE_DIR}. Run 03_showcase_curation.py first.')
+
+    print(f'Found {len(image_paths)} Golden Samples. Starting CSV generation...')
+    csv_data= []
+
+    # Reading Images, Cropping Buildings, Generating Features from Buidlings and Passing Features through Classifier for Generating Prediction, appending in CSV:
+    for img_path in tqdm(image_paths):
+        image_name= os.path.basename(img_path)
+        img= cv2.imread(img_path)
+
+        if img is None:
+            continue
+
+        img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Pulling Building Coordinates in the Image:
+        buildings= extract_real_buidings(image_name= image_name)
+
+        # Processing all found buidlings:
+        for  bldg in buildings:
+            uid= bldg['uid']
+            ymin, xmin, ymax, xmax= bldg['box']
+
+            # Cropping Building from Image:
+            crop= img[ymin:ymax, xmin:xmax]
+
+            # Pre-Processing Cropped Building for ResNet50:
+            crop_resized= cv2.resize(crop, (224,224))
+            crop_expanded= np.expand_dims(crop_resized, axis= 0)
+            crop_preprocessed= tf.keras.applications.resnet50.preprocess_input(crop_expanded.astype(np.float32))
+
+            # Extracting Feature Vector from Building using Frozen ResNet50:
+            feature_vector= resnet.predict(crop_preprocessed, verbose= 0)
+
+            # Predicting Building's Damage Level using XGBoost Classifier:
+            probabilities= xgb_model.predict_proba(feature_vector)[0]
+
+            # Calculating Building's Footprint Area:
+            footprint_area= (ymax- ymin) * (xmax - xmin)
+
+            # Appending Buidling Stats and Predicted Damage Level to CSV:
+            csv_data.append({
+                'image_name': image_name,
+                'building_uid': uid,
+                'ymin': ymin,
+                'xmin': xmin,
+                'ymax': ymax,
+                'xmax': xmax,
+                'footprint_sq_px': footprint_area,
+                'prob_no_damage': round(float(probabilities[0]), 4),
+                'prob_minor': round(float(probabilities[1]), 4),
+                'prob_major': round(float(probabilities[2]), 4),
+                'prob_destroyed': round(float(probabilities[3]), 4)
+            })
+
+    
+    # Final Dataframe to save to CSV file:
+    df= pd.DataFrame(csv_data)
+    df.to_csv(OUTPUT_CSV_PATH, index= False)
+
+    print("\n" + "="*50)
+    print(f"SUCCESS: Final CSV Saved with {len(df)} total structures.")
+    print(f"File Saved at: {OUTPUT_CSV_PATH}")
+    print("="*50 + "\n")
+
+    
 if __name__ == '__main__':
-    temp= extract_real_buidings('palu-tsunami_00000064_post_disaster.png')
-    print(temp)
-    print(len(temp))
+    # temp= extract_real_buidings('palu-tsunami_00000064_post_disaster.png')
+    # print(temp)
+    # print(len(temp))
+    showcase_csv_prep()
