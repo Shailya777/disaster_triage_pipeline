@@ -37,3 +37,12 @@ try:
 except FileNotFoundError:
     st.error(f'Critical Error: Could not find Showcase file at {SHOWCASE_PATH}.')
     st.stop()
+
+# Sidebar Panel Configuration:
+st.sidebar.title('Triage Command')
+st.sidebar.markdown('---')
+
+# Extracting Unique Disaster Names and Images for The Dropdown:
+df['disaster_name']= df['image_name'].apply(lambda x: x.split('_')[0].replace('-', ' ').title())
+disaster_list= df['disaster_name'].unique()
+selected_disaster= st.sidebar.selectbox('Select Event:', disaster_list)
