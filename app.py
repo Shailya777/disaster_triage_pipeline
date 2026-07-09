@@ -46,3 +46,7 @@ st.sidebar.markdown('---')
 df['disaster_name']= df['image_name'].apply(lambda x: x.split('_')[0].replace('-', ' ').title())
 disaster_list= df['disaster_name'].unique()
 selected_disaster= st.sidebar.selectbox('Select Event:', disaster_list)
+
+# Filtering Images based on Selected Disaster:
+filtered_images= df[df['disaster_name'] == selected_disaster]['image_name'].unique()
+selected_image= st.sidebar.selectbox('Intercept Satellite Feed:', filtered_images)
