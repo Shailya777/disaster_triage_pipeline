@@ -71,9 +71,9 @@ This avoids the severe disk I/O bottleneck caused by writing thousands of indivi
 
 ---
 
-# Phase 4: Triage Classification Strategy *(Pending Execution)*
+## Phase 4: Triage Classification Strategy *(Pending Execution)*
 
-## Evaluation Metric Pivot
+### Evaluation Metric Pivot
 Discarded standard **Accuracy** as the primary evaluation metric.
 
 Since the dataset is heavily dominated by **undamaged buildings** (reflecting real disaster scenarios), the optimization objective was redefined to maximize **Recall** for the following critical classes:
@@ -83,7 +83,7 @@ Since the dataset is heavily dominated by **undamaged buildings** (reflecting re
 
 This minimizes dangerous triage blind spots (false negatives).
 
-## Experiment Design
+### Experiment Design
 Structured a modular Jupyter Notebook framework to evaluate multiple class-imbalance mitigation strategies, including:
 
 - **Algorithmic Balancing**
@@ -93,19 +93,19 @@ Structured a modular Jupyter Notebook framework to evaluate multiple class-imbal
 - **Decision Threshold Optimization**
   - Custom probability threshold tuning
 
-## Triage Classification & Class Imbalance Resolution
+### Triage Classification & Class Imbalance Resolution
 
-### Experiment 1 (Naive Baseline): Trained a vanilla XGBClassifier on the raw 2048-d vectors.
+#### Experiment 1 (Naive Baseline): Trained a vanilla XGBClassifier on the raw 2048-d vectors.
 
 - Result: Achieved 80% global accuracy, but exhibited severe "majority class laziness." The model achieved only a 55% Recall on "Destroyed" buildings, fatally misclassifying over 1,000 flattened structures as "No Damage."
 
-### Experiment 2 (Algorithmic Balancing): Engineered a dynamic sample_weight array (compute_sample_weight) to mathematically penalize the XGBoost loss function for missing minority classes.
+#### Experiment 2 (Algorithmic Balancing): Engineered a dynamic sample_weight array (compute_sample_weight) to mathematically penalize the XGBoost loss function for missing minority classes.
 
 - Result: Successfully manipulated the model's objective. Overall accuracy dropped to 72%, but "Destroyed" Recall surged to 74%, and "Major Damage" Recall more than doubled to 52%.
 
 - Architectural Decision: Validated the trade-off. In disaster triage operations, False Positives (wasted drone flight time) are infinitely preferable to False Negatives (ignored collapsed structures).
 
-### Experiment 3 (Synthetic Data Generation - SMOTE): Attempted to balance the dataset by generating synthetic minority class samples using SMOTE across the 2048-dimensional feature space.
+#### Experiment 3 (Synthetic Data Generation - SMOTE): Attempted to balance the dataset by generating synthetic minority class samples using SMOTE across the 2048-dimensional feature space.
 
 - Result: Failed to outperform algorithmic weighting. "Destroyed" Recall dropped to 61% (down from 74%), and fatal misclassifications (Destroyed predicted as No Damage) more than doubled.
 
@@ -113,14 +113,28 @@ Structured a modular Jupyter Notebook framework to evaluate multiple class-imbal
 
 - Final Baseline Selection: Officially selected the Algorithmically Weighted XGBoost Model (Experiment 2) as the production baseline due to its superior operational recall and zero synthetic data contamination.
 
-### Experiment 4 (Hyperparameter Tuning vs. Operational Intent): Attempted GPU-accelerated hyperparameter tuning (Custom Loop to bypass Scikit-Learn memory leaks).
+#### Experiment 4 (Hyperparameter Tuning vs. Operational Intent): Attempted GPU-accelerated hyperparameter tuning (Custom Loop to bypass Scikit-Learn memory leaks).
 
 - Result: The tuner optimized for f1_macro, successfully raising overall accuracy and precision, but mathematically sacrificing "Destroyed" Recall (dropping it from 74% to 70%).
 
 - Architectural Decision: Rejected the tuned model. In disaster response, prioritizing F1/Accuracy over minority-class Recall is an operational failure. Retained the untuned Weighted Model (Experiment 2).
 
-### Experiment 5 (Custom Threshold Optimization): Discarded standard argmax probability boundaries (50%+). Engineered custom decision logic to heavily bias the model toward minority classes (e.g., flagging Class 3 if probability > 30%).
+#### Experiment 5 (Custom Threshold Optimization): Discarded standard argmax probability boundaries (50%+). Engineered custom decision logic to heavily bias the model toward minority classes (e.g., flagging Class 3 if probability > 30%).
 
 - Result: Achieved project climax. "Destroyed" Recall reached 78%, and "Major Damage" Recall hit 62%. Fatal misclassifications (Class 3 predicted as Class 0) were reduced by over 70% from the naive baseline (1,049 $\rightarrow$ 294).
 
 - Conclusion: Deliberately sacrificed global accuracy (down to 67%) to maximize operational triage survival rates, successfully validating the Decoupled Multimodal Pipeline architecture.
+
+## Phase 5: Production Deployment & UI Architecture
+
+- Challenge: Live inference (TensorFlow + XGBoost) on high-resolution satellite imagery exceeds the memory limits of standard free-tier cloud deployment platforms (e.g., Streamlit Community Cloud's 1GB limit).
+
+- Strategy: Implemented a Decoupled Inference Architecture.
+
+- Execution: * Developed a local orchestration script (04_showcase_prep.py) to process a mathematically curated "Golden Sample" set of 50 images.
+
+- Extracted ground-truth Cartesian coordinates directly from xBD WKT (Well-Known Text) JSON labels.
+
+- Executed the heavy ML pipeline locally and serialized the metadata, coordinates, and XGBoost probabilities into a highly portable deployment payload (deploy_payload.csv containing 4,880 structures).
+
+- Result: The final Streamlit application is entirely decoupled from TensorFlow. It relies strictly on Pandas and OpenCV, guaranteeing millisecond load times and zero risk of Out-Of-Memory (OOM) crashes in production.
