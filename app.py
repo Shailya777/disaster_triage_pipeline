@@ -119,5 +119,8 @@ else:
     col2.metric('Critical Targets (Destroyed)', critical_targets)
     col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
 
-    
+    ### Rendering The Image:
+    st.image(image= img,
+             use_column_width= True,
+             caption= f'Satellite Feed: {selected_image}')
             
