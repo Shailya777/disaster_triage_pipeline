@@ -112,4 +112,12 @@ else:
                           pt2= (xmax, ymax),
                           color= (0, 255, 0),
                           thickness= 1)
+    
+    ### Top Level Metrics:
+    col1, col2, col3= st.columns(3)
+    col1.metric('Total Structures Detected', total_structures)
+    col2.metric('Critical Targets (Destroyed)', critical_targets)
+    col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
+
+    
             
