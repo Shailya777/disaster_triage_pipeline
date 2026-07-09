@@ -22,3 +22,18 @@ st.markdown("""
     </style>
             """,
             unsafe_allow_html= True)
+
+# Defining Directory Paths:
+SHOWCASE_DIR= 'data/showcase'
+SHOWCASE_PATH= 'data/processed/showcase.csv'
+
+# Loading Showcase CSV:
+@st.cache_data
+def load_data():
+    return pd.read_csv(SHOWCASE_PATH)
+
+try:
+    df= load_data()
+except FileNotFoundError:
+    st.error(f'Critical Error: Could not find Showcase file at {SHOWCASE_PATH}.')
+    st.stop()
