@@ -81,7 +81,7 @@ else:
     total_structures= len(image_df)
     critical_targets= 0
 
-    #### Drawing Bounding Boxes:
+    ### Drawing Bounding Boxes:
     for index, row in image_df.iterrows():
         ymin, xmin, ymax, xmax= int(row['ymin']), int(row['xmin']), int(row['ymax']), int(row['xmax'])
 
@@ -106,21 +106,35 @@ else:
                         thickness= 1)
         
         else:
-            # Drawing Green Box:
+            # Drawing Green Box
             cv2.rectangle(img= img,
                           pt1= (xmin, ymin),
                           pt2= (xmax, ymax),
                           color= (0, 255, 0),
                           thickness= 1)
     
-    ### Top Level Metrics:
+    ### Top Level Metrics
     col1, col2, col3= st.columns(3)
     col1.metric('Total Structures Detected', total_structures)
     col2.metric('Critical Targets (Destroyed)', critical_targets)
     col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
 
-    ### Rendering The Image:
+    ### Rendering The Image
     st.image(image= img,
-             use_column_width= True,
+             width= 'stretch',
              caption= f'Satellite Feed: {selected_image}')
-            
+    
+    # 7. Dataframe with Information:
+    st.subheader('Target Ledger')
+
+    ## Formatiing Dataframe:
+    display_df= image_df[['building_uid', 'prob_destroyed', 'prob_major', 'prob_minor', 'prob_no_damage', 'footprint_sq_px']].copy()
+    display_df= display_df.sort_values(by= ['prob_destroyed', 'footprint_sq_px'], ascending= [False, False])
+    display_df= display_df.reset_index(drop= True)
+
+    ## Renaming Columns:
+    display_df.columns= ['Building UID', 'P(Destroyed)', 'P(Major)', 'P(Minor)', 'P(Intact)', 'Footprint (px)']
+
+    ## Rendering Dataframe:
+    st.dataframe(data= display_df,
+                 use_container_width= True)
