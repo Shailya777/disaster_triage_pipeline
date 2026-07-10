@@ -201,20 +201,36 @@ def curate_golden_samples():
     if len(selected_images) > 50:
         final_selection = np.random.choice(final_selection, 50, replace= False)
 
-    print(f'Selected {len(final_selection)} Images for Golden Showcase Samples. Copying to showcase directory...')
+    print(f'Selected {len(final_selection)} Images for Golden Showcase Samples. Copying Pre and Post Disaster Image Pairs to showcase directory...')
 
     success_count= 0
-    for img_name in final_selection:
-        src= os.path.join(SOURCE_IMG_DIR, img_name)
-        dst= os.path.join(SHOWCASE_DIR, img_name)
+    for post_img_name in final_selection:
 
-        if os.path.exists(src):
-            shutil.copy(src= src, dst= dst)
-            success_count += 1
+        # Determining Pre-Disaster Twin Filename for Current Post Disaster Image:
+        pre_img_name= post_img_name.replace('post_disaster', 'pre_disaster')
+
+        # Source and Destination for Post Disaster Image:
+        post_src= os.path.join(SOURCE_IMG_DIR, post_img_name)
+        post_dst= os.path.join(SHOWCASE_DIR, post_img_name)
+
+        # Source and Destination for Pre Disaster Image:
+        pre_src= os.path.join(SOURCE_IMG_DIR, pre_img_name)
+        pre_dst= os.path.join(SHOWCASE_DIR, pre_img_name)
+
+        # Copying Post Disaster Image from Source to Destination:
+        if os.path.exists(post_src):
+            shutil.copy(src= post_src, dst= post_dst)
         else:
-            print(f'Warning: Could not find {src}')
+            print(f'Warning: Could not find post-disaster image {post_src}')
+
+        # Copying Pre Disaster Image from Source to Destination:
+        if os.path.exists(pre_src):
+            shutil.copy(src= pre_src, dst= pre_dst)
+            success_count += 1 # Only count as a full success if both exist
+        else:
+            print(f'Warning: Could not find pre-disaster image {pre_src}')
     
-    print(f'Golden Showcase Curation Complete. {success_count} Images copied to Showcase Directory.')
+    print(f'Golden Showcase Curation Complete. {success_count} Pre and Post Disaster Image Pairs copied to Showcase Directory.')
 
 if __name__ == '__main__':
     curate_golden_samples()
