@@ -76,7 +76,7 @@ def curate_golden_samples():
     
     This function bypasses manual image selection by mathematically evaluating the 
     model's performance across the dataset. It loads the frozen ResNet50 features 
-    and the serialized XGBoost champion model, generates in-memory predictions using 
+    and the serialized XGBoost model, generates in-memory predictions using 
     custom disaster triage thresholds, and aggregates performance metrics at the 
     image level using Pandas.
 
@@ -88,7 +88,7 @@ def curate_golden_samples():
     3. Edge Cases & Terrain Diversity: Top-performing images (>80% accuracy) 
        sampled evenly across different disaster categories (e.g., hurricanes, fires).
 
-    The final set of up to 50 unique, deduplicated images is automatically copied 
+    The final set of up to 50 unique, deduplicated post-disaster and it's twin pre-disaster images is automatically copied 
     from the raw source directory to the designated showcase directory for 
     downstream processing by the web application.
 
@@ -194,7 +194,7 @@ def curate_golden_samples():
 
 
     # -------------------------------------------------------
-    # Phase 4: Copying Selected files from Source to Showcase Directory:
+    # Phase 4: Copying Selected Post-Disaster files and it's twin Pre-Disaster files from Source to Showcase Directory:
     # -------------------------------------------------------
     
     final_selection= list(set(selected_images))
