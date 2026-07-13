@@ -149,35 +149,20 @@ else:
                           pt2= (xmax, ymax),
                           color= (0, 255, 0),
                           thickness= 1)
-            
-## Loading The Raw Image
-img_path= os.path.join(SHOWCASE_DIR, selected_image)
-if not os.path.exists(img_path):
-    st.error(f'Image missing from Showcase: {selected_image}')
-else:
-    ### Reading Image and Converting to RGB:
-    img= cv2.imread(img_path)
-    img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    
+            ### Top Level Metrics
+            col1, col2, col3= st.columns(3)
+            col1.metric('Total Structures Detected', total_structures)
+            col2.metric('Critical Targets (Destroyed)', critical_targets)
+            col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
 
-    
-
-    
-
-        
-    
-    ### Top Level Metrics
-    col1, col2, col3= st.columns(3)
-    col1.metric('Total Structures Detected', total_structures)
-    col2.metric('Critical Targets (Destroyed)', critical_targets)
-    col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
-
-    ### Rendering The Image
-    st.image(image= img,
+        ### Rendering The Image
+        st.image(image= img_post,
              width= 'stretch',
-             caption= f'Satellite Feed: {selected_image}')
-    
-    # 7. Dataframe with Information:
-    st.subheader('Target Ledger')
+             caption= f'Current Feed: {selected_image}')
+
+        # 7. Dataframe with Information:
+        st.subheader('Target Ledger')
 
     ## Formatiing Dataframe:
     display_df= image_df[['building_uid', 'prob_destroyed', 'prob_major', 'prob_minor', 'prob_no_damage', 'footprint_sq_px']].copy()
