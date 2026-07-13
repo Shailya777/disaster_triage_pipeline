@@ -42,6 +42,8 @@ if 'assessed' not in st.session_state:
     st.session_state.assessed= False
 if 'current_image' not in st.session_state:
     st.session_state.current_image= None
+if view_mode not in st.session_state:
+    st.session_state.view_mode= 'Pre-Disaster (Archive)'
 
 # 5. Sidebar Panel Configuration:
 st.sidebar.title('Triage Command')
@@ -95,7 +97,7 @@ if view_mode == 'Pre-Disaster (Archive)':
     if not os.path.exists(pre_img_path):
         st.warning('Archiev Image not Found!')
     else:
-        img_pre= cv2.cvtColor(cv2.imread(pre_img_path), cv2.COLOR_BGR2RGB)
+        img_pre= cv2.cvtColor(src= cv2.imread(pre_img_path), code= cv2.COLOR_BGR2RGB)
         st.image(img_pre, use_column_width= True, caption= f'Archive Feed: {os.path.basename(pre_img_path)}')
         st.info("Switch to 'Post-Disaster' to run Damage Assessement.")
 
@@ -109,7 +111,7 @@ else:
             if st.button('Assess Damage', type= 'primary', use_container_width= True):
                 st.session_state.assessed= True
         
-        img_post= cv2.cvtColor(cv2.imread(post_img_path), cv2.COLOR_BGR2RGB)
+        img_post= cv2.cvtColor(src= cv2.imread(post_img_path), code= cv2.COLOR_BGR2RGB)
 
         ## Drawing Boxes when Assess Damage Button is Clicked:
         if st.session_state.assessed:
