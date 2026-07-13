@@ -122,7 +122,9 @@ if st.session_state.view_mode == 'Pre-Disaster (Archive)':
         st.warning('Archiev Image not Found!')
     else:
         img_pre= cv2.cvtColor(src= cv2.imread(pre_img_path), code= cv2.COLOR_BGR2RGB)
-        st.image(img_pre, use_column_width= True, caption= f'Archive Feed: {os.path.basename(pre_img_path)}')
+        _, col, _ = st.columns([1, 2, 1]) # Putting the Image in middle column to make it small sized.
+        with col:
+            st.image(img_pre, use_container_width= True, caption= f'Archive Feed: {format_image_name(selected_image)}')
         st.info("Switch to 'Post-Disaster' to run Damage Assessement.")
 
 else:
@@ -183,9 +185,11 @@ else:
             col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
 
         ### Rendering The Image
-        st.image(image= img_post,
-             width= 'stretch',
-             caption= f'Current Feed: {selected_image}')
+        _, col, _ = st.columns([1, 2, 1])
+        with col:
+            st.image(image= img_post,
+             use_container_width= True,
+             caption= f'Current Feed: {format_image_name(selected_image)}')
 
         ### Dataframe with Information:
         if st.session_state.assessed:
