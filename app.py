@@ -74,8 +74,16 @@ st.sidebar.caption('Highlight structures with a high probability of total collap
 ## Getting Data only for the Selected Image
 image_df= df[df['image_name'] == selected_image].copy()
 
-# 6. The Main Visualizer View:
+# 7. The Main Visualizer View:
 st.title(f'Sector Analysis: {selected_disaster}')
+
+## Pre / Post Disaster Toggle Button:
+view_mode= st.radio(
+    label= 'Satellite Feed Timeline',
+    options= ('Pre-Disaster (Archive)', 'Post-Disaster (Current)'),
+    horizontal= True
+)
+
 st.markdown('Automated Structural Damage Assessment via ResNet50 & XGBoost')
 
 ## Loading The Raw Image
