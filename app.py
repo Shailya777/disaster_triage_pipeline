@@ -84,8 +84,33 @@ view_mode= st.radio(
     horizontal= True
 )
 
-st.markdown('Automated Structural Damage Assessment via ResNet50 & XGBoost')
+#st.markdown('Automated Structural Damage Assessment via ResNet50 & XGBoost')
 
+## Determining File Paths:
+post_img_path= os.path.join(SHOWCASE_DIR, selected_image)
+pre_img_path= os.path.join(SHOWCASE_DIR, selected_image.replace('post_disaster', 'pre_disaster'))
+
+# Selecting Image based on View Mode Radio Button:
+if view_mode == 'Pre-Disaster (Archive)':
+    if not os.path.exists(pre_img_path):
+        st.warning('Archiev Image not Found!')
+    else:
+        img_pre= cv2.cvtColor(cv2.imread(pre_img_path), cv2.COLOR_BGR2RGB)
+        st.image(img_pre, use_column_width= True, caption= f'Archive Feed: {os.path.basename(pre_img_path)}')
+        st.info("Switch to 'Post-Disaster' to run Damage Assessement.")
+
+else:
+    if not os.path.exists(post_img_path):
+        st.error(f'Image Missing: {selected_image}')
+    else:
+        # Layout for Assess Damage Button
+        col_btn, col_empty= st.columns([1, 4])
+        with col_btn:
+            if st.button('Assess Damage', type= 'primary', use_container_width= True):
+                st.session_state.assessed= True
+        
+        img_post= cv2.cvtColor(cv2.imread(post_img_path), cv2.COLOR_BGR2RGB)
+        
 ## Loading The Raw Image
 img_path= os.path.join(SHOWCASE_DIR, selected_image)
 if not os.path.exists(img_path):
