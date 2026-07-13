@@ -162,16 +162,18 @@ else:
              caption= f'Current Feed: {selected_image}')
 
         # 7. Dataframe with Information:
-        st.subheader('Target Ledger')
+        if st.session_state.assessed:
+            st.markdown('---')
+            st.subheader('Target Analysis')
 
-    ## Formatiing Dataframe:
-    display_df= image_df[['building_uid', 'prob_destroyed', 'prob_major', 'prob_minor', 'prob_no_damage', 'footprint_sq_px']].copy()
-    display_df= display_df.sort_values(by= ['prob_destroyed', 'footprint_sq_px'], ascending= [False, False])
-    display_df= display_df.reset_index(drop= True)
+            ## Formatiing Dataframe:
+            display_df= image_df[['building_uid', 'prob_destroyed', 'prob_major', 'prob_minor', 'prob_no_damage', 'footprint_sq_px']].copy()
+            display_df= display_df.sort_values(by= ['prob_destroyed', 'footprint_sq_px'], ascending= [False, False])
+            display_df= display_df.reset_index(drop= True)
 
-    ## Renaming Columns:
-    display_df.columns= ['Building UID', 'P(Destroyed)', 'P(Major)', 'P(Minor)', 'P(Intact)', 'Footprint (px)']
+            ## Renaming Columns:
+            display_df.columns= ['Building UID', 'P(Destroyed)', 'P(Major)', 'P(Minor)', 'P(Intact)', 'Footprint (px)']
 
-    ## Rendering Dataframe:
-    st.dataframe(data= display_df,
+            ## Rendering Dataframe:
+            st.dataframe(data= display_df,
                  use_container_width= True)
