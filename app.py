@@ -110,7 +110,46 @@ else:
                 st.session_state.assessed= True
         
         img_post= cv2.cvtColor(cv2.imread(post_img_path), cv2.COLOR_BGR2RGB)
+
+        ## Drawing Boxes when Assess Damage Button is Clicked:
+        if st.session_state.assessed:
+
+            ### Tracking Image Metrics:
+            total_structures= len(image_df)
+            critical_targets= 0
+
+            ### Drawing Bounding Boxes:
+            for index, row in image_df.iterrows():
+                ymin, xmin, ymax, xmax= int(row['ymin']), int(row['xmin']), int(row['ymax']), int(row['xmax'])
+
+                # Checking if it meets Destroyed Threshold:
+                if row['prob_destroyed'] >= destroyed_thresh:
+                    critical_targets += 1
+
+                    # Drawing Red Box:
+                    cv2.rectangle(img= img_post, 
+                          pt1= (xmin, ymin), 
+                          pt2= (xmax, ymax), 
+                          color= (255, 0, 0),
+                          thickness= 2)
+            
+                    # Adding a Label:
+                    cv2.putText(img= img_post,
+                        text= f"{row['prob_destroyed']:.2f}",
+                        org= (xmin, ymin- 5),
+                        fontFace= cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale= 0.4,
+                        color= (255, 0, 0),
+                        thickness= 1)
         
+                else:
+                    # Drawing Green Box
+                    cv2.rectangle(img= img_post,
+                          pt1= (xmin, ymin),
+                          pt2= (xmax, ymax),
+                          color= (0, 255, 0),
+                          thickness= 1)
+            
 ## Loading The Raw Image
 img_path= os.path.join(SHOWCASE_DIR, selected_image)
 if not os.path.exists(img_path):
@@ -120,41 +159,11 @@ else:
     img= cv2.imread(img_path)
     img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    ### Tracking Image Metrics:
-    total_structures= len(image_df)
-    critical_targets= 0
+    
 
-    ### Drawing Bounding Boxes:
-    for index, row in image_df.iterrows():
-        ymin, xmin, ymax, xmax= int(row['ymin']), int(row['xmin']), int(row['ymax']), int(row['xmax'])
+    
 
-        # Checking if it meets Destroyed Threshold:
-        if row['prob_destroyed'] >= destroyed_thresh:
-            critical_targets += 1
-
-            # Drawing Red Box:
-            cv2.rectangle(img= img, 
-                          pt1= (xmin, ymin), 
-                          pt2= (xmax, ymax), 
-                          color= (255, 0, 0),
-                          thickness= 2)
-            
-            # Adding a Label:
-            cv2.putText(img= img,
-                        text= f"{row['prob_destroyed']:.2f}",
-                        org= (xmin, ymin- 5),
-                        fontFace= cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale= 0.4,
-                        color= (255, 0, 0),
-                        thickness= 1)
         
-        else:
-            # Drawing Green Box
-            cv2.rectangle(img= img,
-                          pt1= (xmin, ymin),
-                          pt2= (xmax, ymax),
-                          color= (0, 255, 0),
-                          thickness= 1)
     
     ### Top Level Metrics
     col1, col2, col3= st.columns(3)
