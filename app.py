@@ -59,9 +59,23 @@ st.sidebar.markdown('---')
 
 ## Extracting Unique Disaster Names and Images for The Dropdown
 df['disaster_name']= df['image_name'].apply(lambda x: x.split('_')[0].replace('-', ' ').title())
-disaster_list= df['disaster_name'].unique()
+disaster_list= ['--- Select Disaster ---'] + list(df['disaster_name'].unique())
 selected_disaster= st.sidebar.selectbox('Select Event:', disaster_list)
 
+## Landing Page:
+if selected_disaster == '--- Select Disaster ---':
+    st.title('Disaster Triage AI Command Center')
+    st.markdown('### Automated Structural Damage Assessment Pipeline')
+    st.info('Please select an Event and Sector from the sidebar to begin.**')
+    st.markdown("""
+    **Operational Instructions:**
+    1. **Select an Event:** Choose a natural disaster from the global database.
+    2. **Intercept Satellite Feed:** Select a specific geographic sector to analyze.
+    3. **Review Baseline:** Observe the 'Pre-Disaster' archive footage to understand the structural baseline.
+    4. **Assess Damage:** Switch to the 'Post-Disaster' timeline and deploy the AI to instantly highlight critical casualties and collapsed infrastructure.
+    """)
+    st.stop()
+    
 ## Filtering Images based on Selected Disaster
 filtered_images= df[df['disaster_name'] == selected_disaster]['image_name'].unique()
 selected_image= st.sidebar.selectbox('Intercept Satellite Feed:', filtered_images)
