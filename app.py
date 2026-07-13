@@ -42,10 +42,18 @@ if 'assessed' not in st.session_state:
     st.session_state.assessed= False
 if 'current_image' not in st.session_state:
     st.session_state.current_image= None
-if view_mode not in st.session_state:
+if "view_mode" not in st.session_state:
     st.session_state.view_mode= 'Pre-Disaster (Archive)'
 
-# 5. Sidebar Panel Configuration:
+# 5. Format Function for Image Names:
+def format_imgae_name(filename):
+    try:
+        sector_id= filename.split('_')[1]
+        return f'Sector {sector_id}'
+    except:
+        return filename
+    
+# 6. Sidebar Panel Configuration:
 st.sidebar.title('Triage Command')
 st.sidebar.markdown('---')
 
@@ -71,7 +79,7 @@ destroyed_thresh= st.sidebar.slider('Destroyed Confidence Threshold', min_value=
 st.sidebar.caption('Highlight structures with a high probability of total collapse.')
 
 
-# 6. Data Filtering:
+# 7. Data Filtering:
 
 ## Getting Data only for the Selected Image
 image_df= df[df['image_name'] == selected_image].copy()
@@ -163,7 +171,7 @@ else:
              width= 'stretch',
              caption= f'Current Feed: {selected_image}')
 
-        # 7. Dataframe with Information:
+        ### Dataframe with Information:
         if st.session_state.assessed:
             st.markdown('---')
             st.subheader('Target Analysis')
