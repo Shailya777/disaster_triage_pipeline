@@ -3,7 +3,6 @@ import os
 import cv2
 import pandas as pd
 import numpy as np
-from PIL import Image
 import streamlit as st
 
 # 1. Page Configuration:
@@ -38,7 +37,13 @@ except FileNotFoundError:
     st.error(f'Critical Error: Could not find Showcase file at {SHOWCASE_PATH}.')
     st.stop()
 
-# 4. Sidebar Panel Configuration:
+# 4. Initializing Session State to Track "Assess Damage" Button and Image Changes:
+if 'assessed' not in st.session_state:
+    st.session_state.assessed= False
+if 'current_image' not in st.session_state:
+    st.session_state.current_image= None
+
+# 5. Sidebar Panel Configuration:
 st.sidebar.title('Triage Command')
 st.sidebar.markdown('---')
 
@@ -51,6 +56,11 @@ selected_disaster= st.sidebar.selectbox('Select Event:', disaster_list)
 filtered_images= df[df['disaster_name'] == selected_disaster]['image_name'].unique()
 selected_image= st.sidebar.selectbox('Intercept Satellite Feed:', filtered_images)
 
+## Resetting The Assessment State if User Selects a New Image:
+if st.session_state.current_image != selected_image:
+    st.session_state.assessed= False
+    st.session_state.current_image= selected_image
+
 ## Slider for Selecting Threshold
 st.sidebar.markdown('---')
 st.sidebar.subheader('Triage Thresholds')
@@ -59,7 +69,7 @@ destroyed_thresh= st.sidebar.slider('Destroyed Confidence Threshold', min_value=
 st.sidebar.caption('Highlight structures with a high probability of total collapse.')
 
 
-# 5. Data Filtering:
+# 6. Data Filtering:
 
 ## Getting Data only for the Selected Image
 image_df= df[df['image_name'] == selected_image].copy()
