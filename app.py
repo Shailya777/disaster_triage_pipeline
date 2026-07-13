@@ -46,7 +46,7 @@ if "view_mode" not in st.session_state:
     st.session_state.view_mode= 'Pre-Disaster (Archive)'
 
 # 5. Format Function for Image Names:
-def format_imgae_name(filename):
+def format_image_name(filename):
     try:
         sector_id= filename.split('_')[1]
         return f'Sector {sector_id}'
@@ -75,14 +75,15 @@ if selected_disaster == '--- Select Disaster ---':
     4. **Assess Damage:** Switch to the 'Post-Disaster' timeline and deploy the AI to instantly highlight critical casualties and collapsed infrastructure.
     """)
     st.stop()
-    
-## Filtering Images based on Selected Disaster
+
+## Filtering Images based on Selected Disaster if Disaster is selected:
 filtered_images= df[df['disaster_name'] == selected_disaster]['image_name'].unique()
-selected_image= st.sidebar.selectbox('Intercept Satellite Feed:', filtered_images)
+selected_image= st.sidebar.selectbox('Intercept Satellite Feed:', filtered_images, format_func= format_image_name)
 
 ## Resetting The Assessment State if User Selects a New Image:
-if st.session_state.current_image != selected_image:
+if selected_image and st.session_state.current_image != selected_image:
     st.session_state.assessed= False
+    st.session_state.view_mode= 'Pre-Disaster (Archive)'
     st.session_state.current_image= selected_image
 
 ## Slider for Selecting Threshold
@@ -105,6 +106,7 @@ st.title(f'Sector Analysis: {selected_disaster}')
 view_mode= st.radio(
     label= 'Satellite Feed Timeline',
     options= ('Pre-Disaster (Archive)', 'Post-Disaster (Current)'),
+    key= 'view_mode',
     horizontal= True
 )
 
@@ -115,7 +117,7 @@ post_img_path= os.path.join(SHOWCASE_DIR, selected_image)
 pre_img_path= os.path.join(SHOWCASE_DIR, selected_image.replace('post_disaster', 'pre_disaster'))
 
 # Selecting Image based on View Mode Radio Button:
-if view_mode == 'Pre-Disaster (Archive)':
+if st.session_state.view_mode == 'Pre-Disaster (Archive)':
     if not os.path.exists(pre_img_path):
         st.warning('Archiev Image not Found!')
     else:
