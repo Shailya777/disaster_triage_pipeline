@@ -124,8 +124,8 @@ def showcase_csv_prep():
     resnet, xgb_model= load_pipelines()
 
     # Loading Showcase Image Paths:
-    image_paths= glob.glob(os.path.join(SHOWCASE_DIR, '*.png')) + \
-                 glob.glob(os.path.join(SHOWCASE_DIR, '*.jpg'))
+    image_paths= glob.glob(os.path.join(SHOWCASE_DIR, '*post_disaster.png')) + \
+                 glob.glob(os.path.join(SHOWCASE_DIR, '*post_disaster.jpg'))
 
     if not image_paths:
         print(f'Error: No images found in {SHOWCASE_DIR}. Run 03_showcase_curation.py first.')
