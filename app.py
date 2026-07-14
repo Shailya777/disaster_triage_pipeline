@@ -4,6 +4,10 @@ import cv2
 import pandas as pd
 import numpy as np
 import streamlit as st
+import gc
+
+# To Prevent OpenCV from Spawning too many Threads:
+cv2.setNumThreads(0)
 
 # 1. Page Configuration:
 st.set_page_config(
@@ -213,3 +217,5 @@ else: # Post-Disaster Mode
             ## Rendering Dataframe:
             st.dataframe(data= display_df,
                  width= 'stretch')
+
+gc.collect()
