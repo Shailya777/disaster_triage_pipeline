@@ -99,7 +99,7 @@ st.sidebar.caption('Highlight structures with a high probability of total collap
 ## Getting Data only for the Selected Image
 image_df= df[df['image_name'] == selected_image].copy()
 
-# 7. The Main Visualizer View:
+# 8. The Main Visualizer View:
 st.title(f'Sector Analysis: {selected_disaster}')
 
 ## Pre / Post Disaster Toggle Button:
@@ -110,14 +110,37 @@ view_mode= st.radio(
     horizontal= True
 )
 
-#st.markdown('Automated Structural Damage Assessment via ResNet50 & XGBoost')
+## Constant UI Elements:
+
+# 1. Button (Disabled if in Archive Mode):
+col_btn, _ = st.columns([1, 4])
+with col_btn:
+    is_archive= st.session_state.view_mode== 'Pre-Disaster (Archive)'
+
+    if st.button(label= 'Assess Damage', type= 'primary', use_container_width= True, disabled= is_archive):
+        st.session_state.assessed= True
+
+# 2. Metrics (Always visible, shows dashes until assessed):
+col1, col2, col3= st.columns(3)
+if st.session_state.assessed and not is_archive:
+    total_structures= len(image_df)
+    critical_targets= len(image_df[image_df['prob_destroyed'] >= destroyed_thresh])
+
+    col1.metric('Total Structures Detected', total_structures)       
+    col2.metric('Critical Targets (Destroyed)', critical_targets)
+    col3.metric('Deployement Readiness', 'Active', delta= 'Optimized', delta_color= 'normal')
+
+else:
+    col1.metric('Total Structures Detected', '--')
+    col2.metric('Critical Targets (Destroyed)', '--')
+    col3.metric('Deployment Readiness', '--')
 
 ## Determining File Paths:
 post_img_path= os.path.join(SHOWCASE_DIR, selected_image)
 pre_img_path= os.path.join(SHOWCASE_DIR, selected_image.replace('post_disaster', 'pre_disaster'))
 
 # Selecting Image based on View Mode Radio Button:
-if st.session_state.view_mode == 'Pre-Disaster (Archive)':
+if is_archive: # Pre-Disaster Mode
     if not os.path.exists(pre_img_path):
         st.warning('Archiev Image not Found!')
     else:
@@ -127,32 +150,20 @@ if st.session_state.view_mode == 'Pre-Disaster (Archive)':
             st.image(img_pre, use_container_width= True, caption= f'Archive Feed: {format_image_name(selected_image)}')
         st.info("Switch to 'Post-Disaster' to run Damage Assessement.")
 
-else:
+else: # Post-Disaster Mode
     if not os.path.exists(post_img_path):
         st.error(f'Image Missing: {selected_image}')
     else:
-        # Layout for Assess Damage Button
-        col_btn, col_empty= st.columns([1, 4])
-        with col_btn:
-            if st.button('Assess Damage', type= 'primary', use_container_width= True):
-                st.session_state.assessed= True
-        
         img_post= cv2.cvtColor(src= cv2.imread(post_img_path), code= cv2.COLOR_BGR2RGB)
 
         ## Drawing Boxes when Assess Damage Button is Clicked:
         if st.session_state.assessed:
 
-            ### Tracking Image Metrics:
-            total_structures= len(image_df)
-            critical_targets= 0
-
-            ### Drawing Bounding Boxes:
             for index, row in image_df.iterrows():
                 ymin, xmin, ymax, xmax= int(row['ymin']), int(row['xmin']), int(row['ymax']), int(row['xmax'])
 
                 # Checking if it meets Destroyed Threshold:
                 if row['prob_destroyed'] >= destroyed_thresh:
-                    critical_targets += 1
 
                     # Drawing Red Box:
                     cv2.rectangle(img= img_post, 
@@ -178,11 +189,6 @@ else:
                           color= (0, 255, 0),
                           thickness= 1)
                     
-            ### Top Level Metrics
-            col1, col2, col3= st.columns(3)
-            col1.metric('Total Structures Detected', total_structures)
-            col2.metric('Critical Targets (Destroyed)', critical_targets)
-            col3.metric('Deployement Readiness', 'ACTIVE', delta= 'Optimized', delta_color= 'normal')
 
         ### Rendering The Image
         _, col, _ = st.columns([1, 2, 1])
