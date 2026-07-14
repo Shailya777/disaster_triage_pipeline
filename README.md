@@ -5,7 +5,7 @@
 ![XGBoost](https://img.shields.io/badge/XGBoost-Champion-green?style=flat&logo=xgboost)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red?style=flat&logo=streamlit)
 
-**Live Dashboard:** [Link]
+**Live Dashboard:** [Streamlit Cloud](https://disaster-analysis.streamlit.app/)
 
 ---
 
