@@ -22,13 +22,15 @@ Rather than deploying an expensive deep learning model directly to the cloud, th
 
 ### Pre-Disaster Baseline
 
-![Pre-Disaster Baseline]()
+![Pre-Disaster Baseline](assets/pre.png)
 
 *Archive satellite imagery before the disaster event.*
 
 ### Post-Disaster Assessment
 
-![Post-Disaster Assessment]()
+![Post-Disaster Assessment](assets/post.png)
+![Post-Disaster Assessment with Data](assets/post_analysis.png)
+
 
 *AI assessment highlighting structures with a high probability of total collapse.*
 
