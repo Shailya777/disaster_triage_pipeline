@@ -138,3 +138,31 @@ Structured a modular Jupyter Notebook framework to evaluate multiple class-imbal
 - Executed the heavy ML pipeline locally and serialized the metadata, coordinates, and XGBoost probabilities into a highly portable deployment payload (deploy_payload.csv containing 4,880 structures).
 
 - Result: The final Streamlit application is entirely decoupled from TensorFlow. It relies strictly on Pandas and OpenCV, guaranteeing millisecond load times and zero risk of Out-Of-Memory (OOM) crashes in production.
+
+### Asset Optimization & Payload Compression
+- **Challenge:** The curated showcase directory accumulated over 140MB of raw, uncompressed dual-timeline `.png` images, which violates Git best practices and slows down web deployment.
+- **Strategy:** Automated Asset Compression.
+- **Execution:** Engineered `05_optimize_assets.py` to batch-convert the Golden Sample raw `.png` images into quality-85 `.jpg` format, reducing the total payload size by ~85% (down to ~15MB) while perfectly preserving the 1024x1024 pixel matrix required for accurate Cartesian bounding box placement.
+
+---
+
+## Phase 6: UI/UX Engineering & State Management
+
+### Dual-Timeline Context
+- **Challenge:** Triage commanders cannot accurately assess destruction without an architectural baseline.
+- **Execution:** Updated `03_showcase_curation.py` to automatically pair and copy exact "Pre-Disaster" archive twins for every "Post-Disaster" Golden Sample. Engineered a Streamlit `session_state` toggle to allow instantaneous visual switching between timelines.
+
+### Layout Shift (UI Jank) Mitigation
+- **Challenge:** Dynamic injection of triage metrics and assessment buttons caused the satellite imagery to physically shift down the viewport, creating a jarring user experience.
+- **Execution:** Engineered a permanent DOM "Standby State" that reserves exact vertical height for metrics (`--`) prior to assessment. Wrapped image renders in a constrained central column ratio (`[1, 2, 1]`) to eliminate vertical scrolling and lock the visualizer perfectly in place regardless of application state.
+
+---
+
+## Phase 7: MLOps & Environment Segregation
+
+### Dependency Decoupling
+- **Challenge:** A raw `pip freeze` dump contains 170+ OS-specific and deep learning packages that will cause lightweight cloud containers (Streamlit Community Cloud) to time out or crash with Out-Of-Memory (OOM) exceptions.
+- **Execution:** Implemented strict environment reproducibility using the DRY (Don't Repeat Yourself) principle:
+  - **Production (`requirements.txt`):** Pinned strictly to the lightweight frontend libraries (`streamlit`, `pandas`, `numpy`, `opencv-python-headless`) for instant, deterministic cloud builds.
+  - **Development (`requirements-dev.txt`):** Inherits the UI payload via the `-r` flag and isolates the massive deep learning binaries (`tensorflow`, `xgboost`, `scikit-learn`) exclusively for local training and pipeline iteration. 
+- **Result:** A hyper-portable, professional repository architecture that cleanly separates model training from application serving.
