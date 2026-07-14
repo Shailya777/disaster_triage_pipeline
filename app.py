@@ -117,7 +117,7 @@ col_btn, _ = st.columns([1, 4])
 with col_btn:
     is_archive= st.session_state.view_mode== 'Pre-Disaster (Archive)'
 
-    if st.button(label= 'Assess Damage', type= 'primary', use_container_width= True, disabled= is_archive):
+    if st.button(label= 'Assess Damage', type= 'primary', width= 'stretch', disabled= is_archive):
         st.session_state.assessed= True
 
 # 2. Metrics (Always visible, shows dashes until assessed):
@@ -147,7 +147,7 @@ if is_archive: # Pre-Disaster Mode
         img_pre= cv2.cvtColor(src= cv2.imread(pre_img_path), code= cv2.COLOR_BGR2RGB)
         _, col, _ = st.columns([1, 2, 1]) # Putting the Image in middle column to make it small sized.
         with col:
-            st.image(img_pre, use_container_width= True, caption= f'Archive Feed: {format_image_name(selected_image)}')
+            st.image(img_pre, width= 'stretch', caption= f'Archive Feed: {format_image_name(selected_image)}')
         st.info("Switch to 'Post-Disaster' to run Damage Assessement.")
 
 else: # Post-Disaster Mode
@@ -194,7 +194,7 @@ else: # Post-Disaster Mode
         _, col, _ = st.columns([1, 2, 1])
         with col:
             st.image(image= img_post,
-             use_container_width= True,
+             width= 'stretch',
              caption= f'Current Feed: {format_image_name(selected_image)}')
 
         ### Dataframe with Information:
@@ -212,4 +212,4 @@ else: # Post-Disaster Mode
 
             ## Rendering Dataframe:
             st.dataframe(data= display_df,
-                 use_container_width= True)
+                 width= 'stretch')
